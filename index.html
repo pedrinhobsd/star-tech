@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAR TECH | Sistema de Gestão</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Cores baseadas na identidade visual */
+            --primary: #9d00ff;
+            --primary-dark: #6a00ac;
+            --secondary: #1e1e2d;
+            --accent: #00d4ff;
+            
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            
+            --bg-body: #f3f4f6;
+            --bg-card: #ffffff;
+            --text-main: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+            --input-bg: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* TEMA ESCURO */
+        body.dark-mode {
+            --bg-body: #0b0b12;
+            --bg-card: #151520;
+            --text-main: #e2e8f0;
+            --text-light: #94a3b8;
+            --border: #2d2d3f;
+            --input-bg: #1e1e2d;
+            --shadow: 0 4px 20px rgba(157, 0, 255, 0.15);
+        }
+
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; outline: none; transition: background-color 0.3s, color 0.3s; }
+        body { margin: 0; background-color: var(--bg-body); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
+
+        /* --- SIDEBAR --- */
+        aside {
+            width: 260px;
+            background: linear-gradient(180deg, #120024 0%, #000000 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+            z-index: 10;
+            border-right: 1px solid #333;
+        }
+        
+        .brand-container {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .brand-logo-img {
+            max-width: 100px;
+            max-height: 100px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+        
+        .brand-fallback-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .brand-text {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #d884ff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        nav a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 15px;
+            color: #a6a6c0;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: 0.2s;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        nav a:hover { background: rgba(255,255,255,0.05); color: #fff; border-color: rgba(255,255,255,0.1); }
+        nav a.active { 
+            background: rgba(157, 0, 255, 0.15); 
+            color: #d884ff; 
+            border: 1px solid rgba(157, 0, 255, 0.3);
+            box-shadow: 0 0 10px rgba(157, 0, 255, 0.1);
+        }
+
+        .theme-toggle {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #a6a6c0;
+        }
+        .theme-toggle:hover { color: #fff; }
+
+        /* --- MAIN CONTENT --- */
+        main { flex: 1; padding: 30px; overflow-y: auto; }
+        
+        .header-page { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        
+        /* Dashboard & Cards */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .kpi-card { background: var(--bg-card); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 20px; border: 1px solid var(--border); }
+        .kpi-icon { width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .kpi-info h3 { margin: 0; font-size: 0.9rem; color: var(--text-light); }
+        .kpi-info p { margin: 5px 0 0 0; font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
+
+        /* Tabelas */
+        .content-card { background: var(--bg-card); border-radius: 12px; box-shadow: var(--shadow); padding: 25px; border: 1px solid var(--border); }
+        .toolbar { display: flex; justify-content: space-between; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; }
+        .search-box { position: relative; flex: 1; max-width: 400px; }
+        .search-box input { width: 100%; padding: 10px 10px 10px 40px; border: 1px solid var(--border); border-radius: 8px; background: var(--input-bg); color: var(--text-main); }
+        .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-light); }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; color: var(--text-light); font-weight: 600; padding: 15px; border-bottom: 1px solid var(--border); }
+        td { padding: 15px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text-main); }
+        tr:hover { background-color: rgba(0,0,0,0.02); }
+        
+        /* Badges */
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .bg-open { background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .bg-progress { background: rgba(79, 70, 229, 0.15); color: #4f46e5; border: 1px solid rgba(79, 70, 229, 0.3); }
+        .bg-done { background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        /* Botões */
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; box-shadow: 0 4px 10px rgba(157, 0, 255, 0.3); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(157, 0, 255, 0.4); }
+        .btn-secondary { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
+        .btn-icon { background: transparent; color: var(--text-light); font-size: 1.1rem; padding: 6px; cursor: pointer; border: none; border-radius: 6px; }
+        .btn-icon:hover { color: var(--primary); background: rgba(157, 0, 255, 0.1); }
+
+        /* Modais */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(3px); }
+        .modal-container { background: var(--bg-card); width: 95%; max-width: 800px; border-radius: 12px; padding: 30px; max-height: 90vh; overflow-y: auto; position: relative; border: 1px solid var(--border); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-full { grid-column: span 2; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: var(--text-main); }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text-main); }
+        
+        .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: var(--bg-body); padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .check-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-main); cursor: pointer; }
+
+        /* Preview Logo */
+        .logo-preview-container {
+            margin-top: 10px;
+            text-align: center;
+            border: 2px dashed var(--border);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .logo-preview-img {
+            max-width: 150px;
+            max-height: 100px;
+            display: none;
+            margin: 0 auto;
+        }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #1e1e2d; color: white; padding: 12px 24px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transform: translateY(100px); transition: 0.3s; z-index: 2000; border-left: 4px solid var(--primary); }
+        .toast.show { transform: translateY(0); }
+
+        /* --- IMPRESSÃO --- */
+        @media print {
+            aside, .header-page, .toolbar, .btn, .toast, .content-card, .backup-panel { display: none !important; }
+            body, body.dark-mode { background: white !important; color: black !important; margin: 0; padding: 0; }
+            main { padding: 0; margin: 0; width: 100%; }
+            #print-area { display: block !important; width: 100%; }
+            @page { margin: 0; size: auto; }
+        }
+
+        #print-area { display: none; }
+
+        /* --- CUPOM TÉRMICO --- */
+        .cupom-wrapper {
+            width: 80mm;
+            max-width: 100%;
+            margin: 0 auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            line-height: 1.2;
+            color: #000;
+            padding: 5px 5px 20px 5px;
+            background: #fff;
+        }
+
+        .cupom-logo {
+            display: block;
+            margin: 0 auto 10px auto;
+            max-width: 80%;
+            height: auto;
+            max-height: 100px;
+            object-fit: contain;
+        }
+
+        .cupom-header { text-align: center; margin-bottom: 5px; }
+        .cupom-store-name { font-size: 14px; font-weight: bold; text-transform: uppercase; margin-bottom: 2px; }
+        .cupom-divider { border-top: 1px dashed #000; margin: 8px 0; display: block; }
+        .cupom-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+        .cupom-val { text-align: right; word-break: break-all; font-weight: bold; }
+        .cupom-big-total { font-size: 16px; font-weight: bold; text-align: right; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 5px 0; margin: 10px 0; }
+        .cupom-footer { text-align: center; margin-top: 15px; font-size: 10px; }
+
+        /* --- IMPRESSÃO A4 --- */
+        .a4-wrapper { font-family: Arial, sans-serif; padding: 40px; max-width: 210mm; margin: 0 auto; }
+        .a4-header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px; }
+        .a4-box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        .a4-title { background: #eee; padding: 5px 10px; font-weight: bold; margin: -15px -15px 15px -15px; border-bottom: 1px solid #ccc; font-size: 0.9rem; text-transform: uppercase; }
+        .a4-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+
+    <aside>
+        <div class="brand-container">
+            <img src="" class="brand-logo-img" id="sidebarLogo" style="display:none;"> 
+            <div id="sidebarIcon" class="brand-fallback-icon" style="display: block;">
+                <i class="fas fa-microchip"></i>
+            </div>
+
+            <div class="brand-text" id="brand-title">STAR TECH</div>
+            <div style="font-size: 0.7rem; color: #a6a6c0; margin-top: 5px;">Assistência & Acessórios</div>
+        </div>
+        
+        <nav>
+            <a onclick="showView('dashboard')" class="active" id="nav-dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a>
+            <a onclick="showView('os')" id="nav-os"><i class="fas fa-mobile-alt"></i> Ordens de Serviço</a>
+            <a onclick="openConfigModal()"><i class="fas fa-cog"></i> Configurações</a>
+        </nav>
+        
+        <div class="theme-toggle" onclick="toggleTheme()">
+            <span><i class="fas fa-adjust"></i> Tema</span>
+            <span id="theme-label">Claro</span>
+        </div>
+    </aside>
+
+    <main>
+        <div id="view-dashboard">
+            <div class="header-page">
+                <div>
+                    <h2 style="font-weight: 800; letter-spacing: -1px;">Visão Geral</h2>
+                    <p style="margin: 0; color: var(--text-light);">Sistema de Gestão v5.0</p>
+                </div>
+                <button class="btn btn-primary" onclick="openModal()">
+                    <i class="fas fa-plus"></i> Nova OS
+                </button>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: rgba(157, 0, 255, 0.1); color: var(--primary);">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <h3>Faturamento (Mês)</h3>
+                        <p id="kpi-faturamento">R$ 0,00</p>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <h3>OS em Aberto</h3>
+                        <p id="kpi-abertas">0</p>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <h3>Concluídas</h3>
+                        <p id="kpi-concluidas">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="margin:0 0 5px 0;"><i class="fas fa-save"></i> Backup</h4>
+                    <p style="margin:0; font-size: 0.85rem; color: var(--text-light);">Mantenha seus dados seguros.</p>
+                </div>
+                <div>
+                    <button class="btn btn-secondary" onclick="exportData()"><i class="fas fa-download"></i> Baixar</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()"><i class="fas fa-upload"></i> Restaurar</button>
+                    <input type="file" id="importFile" style="display:none" onchange="importData(this)" accept=".json">
+                </div>
+            </div>
+        </div>
+
+        <div id="view-os" style="display: none;">
+            <div class="header-page">
+                <h2>Ordens de Serviço</h2>
+                <button class="btn btn-primary" onclick="openModal()">
+                    <i class="fas fa-plus"></i> Nova OS
+                </button>
+            </div>
+
+            <div class="content-card">
+                <div class="toolbar">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar..." onkeyup="renderTable()">
+                    </div>
+                    <select id="filterStatus" class="form-group" style="width: 200px; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text-main);" onchange="renderTable()">
+                        <option value="todos">Todos os Status</option>
+                        <option value="Aberto">Abertos</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Concluido">Concluídos</option>
+                    </select>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table id="table-os">
+                        <thead>
+                            <tr>
+                                <th>#ID</th>
+                                <th>Cliente</th>
+                                <th>Aparelho</th>
+                                <th>Data</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="empty-state" style="text-align: center; padding: 40px; color: var(--text-light); display: none;">
+                    <i class="fas fa-ghost" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                    <p>Nenhuma ordem de serviço encontrada.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="osModal">
+        <div class="modal-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="modalTitle">Nova Ordem de Serviço</h2>
+                <button onclick="closeModal('osModal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main);">&times;</button>
+            </div>
+            
+            <form id="formOS" onsubmit="saveOS(event)">
+                <input type="hidden" id="osId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <input type="text" id="clienteNome" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Contato</label>
+                        <input type="text" id="clienteTel" oninput="maskPhone(this)" placeholder="(00) 00000-0000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Aparelho / Modelo</label>
+                        <input type="text" id="aparelhoModelo" placeholder="Ex: iPhone 13 Pro" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Senha / Padrão</label>
+                        <input type="text" id="aparelhoSenha" placeholder="Se houver">
+                    </div>
+
+                    <div class="form-full">
+                        <label style="margin-bottom: 10px; display: block;">Checklist de Entrada</label>
+                        <div class="checklist-grid">
+                            <label class="check-item"><input type="checkbox" id="check-liga"> Liga</label>
+                            <label class="check-item"><input type="checkbox" id="check-tela"> Tela Quebrada</label>
+                            <label class="check-item"><input type="checkbox" id="check-riscos"> Arranhões</label>
+                            <label class="check-item"><input type="checkbox" id="check-som"> Som Ruim</label>
+                            <label class="check-item"><input type="checkbox" id="check-camera"> Câmera</label>
+                            <label class="check-item"><input type="checkbox" id="check-chip"> Sem Sinal</label>
+                            <label class="check-item"><input type="checkbox" id="check-biometria"> Biometria</label>
+                            <label class="check-item"><input type="checkbox" id="check-bateria"> Bateria Ruim</label>
+                            <label class="check-item"><input type="checkbox" id="check-molhou"> Molhou</label>
+                        </div>
+                    </div>
+
+                    <div class="form-full">
+                        <label>Defeito / Serviço</label>
+                        <textarea id="servicoDesc" rows="3" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="statusOS">
+                            <option value="Aberto">Aberto</option>
+                            <option value="Em Andamento">Em Andamento</option>
+                            <option value="Aguardando Peça">Aguardando Peça</option>
+                            <option value="Concluido">Concluído</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Total (R$)</label>
+                        <input type="text" id="valorTotal" oninput="maskMoney(this)" placeholder="0,00">
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; text-align: right;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('osModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar OS</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="configModal">
+        <div class="modal-container" style="max-width: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Configurações</h2>
+                <button onclick="closeModal('configModal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main);">&times;</button>
+            </div>
+            
+            <form onsubmit="saveConfig(event)">
+                <div class="form-group">
+                    <label>Logotipo da Loja</label>
+                    <input type="file" id="cfgLogoInput" accept="image/*" onchange="previewLogo()">
+                    <div class="logo-preview-container">
+                        <p style="font-size:0.8rem; color:var(--text-light); margin:0;" id="logoHelp">Selecione uma imagem (jpg/png)</p>
+                        <img id="cfgLogoPreview" class="logo-preview-img">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Nome da Loja</label>
+                    <input type="text" id="cfgStoreName" required>
+                </div>
+                <div class="form-group">
+                    <label>Contato da Loja</label>
+                    <input type="text" id="cfgStorePhone" required>
+                </div>
+                <div class="form-group">
+                    <label>Endereço</label>
+                    <textarea id="cfgStoreAddr" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Mensagem Rodapé Cupom</label>
+                    <textarea id="cfgFooterMsg" rows="2"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">Salvar Configurações</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="print-area"></div>
+
+    <div id="toast" class="toast"><span id="toast-msg"></span></div>
+
+    <script>
+        // --- DADOS E INICIALIZAÇÃO ---
+        let OS_DATA = JSON.parse(localStorage.getItem('techrepair_os')) || [];
+        
+        // Configuração com campo logoUrl
+        let CONFIG = JSON.parse(localStorage.getItem('techrepair_config')) || {
+            storeName: 'STAR TECH',
+            phone: '(00) 00000-0000',
+            address: 'Endereço da Loja',
+            footerMsg: 'Obrigado pela preferência!',
+            theme: 'dark',
+            logoUrl: '' // Armazena a imagem em Base64
+        };
+
+        // Variável temporária para o upload da imagem
+        let tempLogoBase64 = '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyTheme();
+            applyConfigToUI();
+            renderDashboard();
+            renderTable();
+        });
+
+        // --- NAVEGAÇÃO ---
+        function showView(viewName) {
+            document.getElementById('view-dashboard').style.display = 'none';
+            document.getElementById('view-os').style.display = 'none';
+            document.getElementById('nav-dashboard').classList.remove('active');
+            document.getElementById('nav-os').classList.remove('active');
+
+            if(viewName === 'dashboard') {
+                document.getElementById('view-dashboard').style.display = 'block';
+                document.getElementById('nav-dashboard').classList.add('active');
+                renderDashboard();
+            } else {
+                document.getElementById('view-os').style.display = 'block';
+                document.getElementById('nav-os').classList.add('active');
+                renderTable();
+            }
+        }
+
+        // --- SISTEMA ---
+        function applyTheme() {
+            const body = document.body;
+            const label = document.getElementById('theme-label');
+            if (CONFIG.theme === 'dark') {
+                body.classList.add('dark-mode');
+                label.innerText = 'Escuro';
+            } else {
+                body.classList.remove('dark-mode');
+                label.innerText = 'Claro';
+            }
+        }
+
+        function toggleTheme() {
+            CONFIG.theme = CONFIG.theme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('techrepair_config', JSON.stringify(CONFIG));
+            applyTheme();
+        }
+
+        function applyConfigToUI() {
+            document.getElementById('brand-title').innerText = CONFIG.storeName;
+            document.title = `${CONFIG.storeName} | Sistema`;
+
+            // Atualiza logo da sidebar
+            const sbLogo = document.getElementById('sidebarLogo');
+            const sbIcon = document.getElementById('sidebarIcon');
+
+            if (CONFIG.logoUrl && CONFIG.logoUrl.length > 50) {
+                sbLogo.src = CONFIG.logoUrl;
+                sbLogo.style.display = 'inline-block';
+                sbIcon.style.display = 'none';
+            } else {
+                sbLogo.style.display = 'none';
+                sbIcon.style.display = 'block';
+            }
+        }
+
+        function openConfigModal() {
+            document.getElementById('cfgStoreName').value = CONFIG.storeName;
+            document.getElementById('cfgStorePhone').value = CONFIG.phone;
+            document.getElementById('cfgStoreAddr').value = CONFIG.address;
+            document.getElementById('cfgFooterMsg').value = CONFIG.footerMsg || '';
+            
+            // Preview da logo atual se existir
+            const prev = document.getElementById('cfgLogoPreview');
+            if(CONFIG.logoUrl) {
+                prev.src = CONFIG.logoUrl;
+                prev.style.display = 'block';
+                document.getElementById('logoHelp').style.display = 'none';
+            } else {
+                prev.style.display = 'none';
+                document.getElementById('logoHelp').style.display = 'block';
+            }
+            
+            document.getElementById('configModal').style.display = 'flex';
+        }
+
+        // --- LÓGICA DE UPLOAD DE LOGO ---
+        function previewLogo() {
+            const file = document.getElementById('cfgLogoInput').files[0];
+            if (file) {
+                // Validação de tamanho (max 500KB recomendado para não travar o LocalStorage)
+                if (file.size > 1024 * 1024) {
+                    alert("A imagem é muito grande! Use uma imagem menor que 1MB.");
+                    document.getElementById('cfgLogoInput').value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempLogoBase64 = e.target.result; // Salva na var temporaria
+                    const prev = document.getElementById('cfgLogoPreview');
+                    prev.src = tempLogoBase64;
+                    prev.style.display = 'block';
+                    document.getElementById('logoHelp').style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function saveConfig(e) {
+            e.preventDefault();
+            CONFIG.storeName = document.getElementById('cfgStoreName').value;
+            CONFIG.phone = document.getElementById('cfgStorePhone').value;
+            CONFIG.address = document.getElementById('cfgStoreAddr').value;
+            CONFIG.footerMsg = document.getElementById('cfgFooterMsg').value;
+            
+            // Se houve upload de nova logo, atualiza
+            if (tempLogoBase64) {
+                CONFIG.logoUrl = tempLogoBase64;
+            }
+
+            try {
+                localStorage.setItem('techrepair_config', JSON.stringify(CONFIG));
+                applyConfigToUI();
+                closeModal('configModal');
+                showToast('Configurações e Logo salvas!');
+            } catch (err) {
+                alert("Erro ao salvar! Provavelmente a imagem da logo é muito pesada. Tente uma imagem menor.");
+                console.error(err);
+            }
+        }
+
+        // --- CRUD & RENDER ---
+        function renderDashboard() {
+            const currentMonth = new Date().getMonth();
+            let fat = 0, abertas = 0, concluidas = 0;
+
+            OS_DATA.forEach(os => {
+                const valor = parseFloat((os.valor || "0").replace('.','').replace(',','.').replace('R$ ','')) || 0;
+                if(['Aberto','Em Andamento','Aguardando Peça'].includes(os.status)) abertas++;
+                if(os.status === 'Concluido') {
+                    concluidas++;
+                    if(new Date(os.createdAt).getMonth() === currentMonth) fat += valor;
+                }
+            });
+
+            document.getElementById('kpi-faturamento').innerText = fat.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+            document.getElementById('kpi-abertas').innerText = abertas;
+            document.getElementById('kpi-concluidas').innerText = concluidas;
+        }
+
+        function renderTable() {
+            const tbody = document.querySelector('#table-os tbody');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filter = document.getElementById('filterStatus').value;
+            
+            tbody.innerHTML = '';
+            
+            const filtered = OS_DATA.filter(os => {
+                const matchSearch = (os.cliente+os.modelo+os.id).toLowerCase().includes(search);
+                const matchFilter = filter === 'todos' ? true : os.status === filter;
+                return matchSearch && matchFilter;
+            });
+
+            document.getElementById('empty-state').style.display = filtered.length ? 'none' : 'block';
+
+            filtered.sort((a,b) => b.id - a.id).forEach(os => {
+                let badge = 'bg-open';
+                if(os.status === 'Concluido') badge = 'bg-done';
+                if(os.status === 'Em Andamento') badge = 'bg-progress';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>#${os.id}</strong></td>
+                    <td>
+                        <div>${os.cliente}</div>
+                        <small style="color:var(--text-light)">${os.telefone}</small>
+                    </td>
+                    <td>${os.modelo}</td>
+                    <td>${new Date(os.createdAt).toLocaleDateString('pt-BR')}</td>
+                    <td><strong>${os.valor || 'R$ 0,00'}</strong></td>
+                    <td><span class="badge ${badge}">${os.status}</span></td>
+                    <td style="text-align: right;">
+                        <button class="btn-icon" title="Cupom" onclick="printCupom(${os.id})"><i class="fas fa-receipt"></i></button>
+                        <button class="btn-icon" title="A4" onclick="printA4(${os.id})"><i class="fas fa-print"></i></button>
+                        <button class="btn-icon" onclick="editOS(${os.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon" onclick="deleteOS(${os.id})" style="color:var(--danger)"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function saveOS(e) {
+            e.preventDefault();
+            const id = document.getElementById('osId').value;
+            const isEdit = !!id;
+            
+            const checklist = {};
+            document.querySelectorAll('.checklist-grid input').forEach(i => checklist[i.id] = i.checked);
+
+            const data = {
+                id: isEdit ? parseInt(id) : Date.now(),
+                createdAt: isEdit ? OS_DATA.find(o=>o.id==id).createdAt : new Date().toISOString(),
+                cliente: document.getElementById('clienteNome').value,
+                telefone: document.getElementById('clienteTel').value,
+                modelo: document.getElementById('aparelhoModelo').value,
+                senha: document.getElementById('aparelhoSenha').value,
+                problema: document.getElementById('servicoDesc').value,
+                status: document.getElementById('statusOS').value,
+                valor: document.getElementById('valorTotal').value,
+                checklist: checklist
+            };
+
+            if(isEdit) OS_DATA[OS_DATA.findIndex(o=>o.id==id)] = data;
+            else OS_DATA.push(data);
+
+            localStorage.setItem('techrepair_os', JSON.stringify(OS_DATA));
+            closeModal('osModal');
+            renderTable(); renderDashboard();
+            showToast('Salvo com sucesso!');
+        }
+
+        // --- IMPRESSÃO CUPOM ---
+        function printCupom(id) {
+            const os = OS_DATA.find(o => o.id === id);
+            const date = new Date(os.createdAt).toLocaleString('pt-BR');
+            const area = document.getElementById('print-area');
+            
+            // Verifica se tem logo salva
+            const logoHtml = CONFIG.logoUrl ? `<img src="${CONFIG.logoUrl}" class="cupom-logo">` : '';
+
+            area.innerHTML = `
+                <div class="cupom-wrapper">
+                    ${logoHtml}
+                    
+                    <div class="cupom-header">
+                        <div class="cupom-store-name">${CONFIG.storeName}</div>
+                        <div>Assistência Técnica</div>
+                        <div>${CONFIG.phone}</div>
+                        <div>${CONFIG.address}</div>
+                    </div>
+                    
+                    <div class="cupom-divider"></div>
+                    <div style="text-align:center; font-weight:bold; font-size:14px;">OS / RECIBO #${os.id}</div>
+                    <div class="cupom-divider"></div>
+                    
+                    <div class="cupom-row"><span>Data:</span> <span>${date}</span></div>
+                    <div class="cupom-row"><span>Cliente:</span> <span class="cupom-val">${os.cliente.split(' ')[0]}...</span></div>
+                    <div class="cupom-row"><span>Fone:</span> <span>${os.telefone}</span></div>
+                    
+                    <div class="cupom-divider"></div>
+                    
+                    <div style="margin-bottom:5px;">
+                        <span style="font-weight:bold">APARELHO:</span> ${os.modelo}<br>
+                        <span style="font-size:11px">Senha: ${os.senha || 'N/A'}</span>
+                    </div>
+                    
+                    <div style="margin-bottom:5px;">
+                        <span style="font-weight:bold">SERVIÇO/DEFEITO:</span><br>
+                        ${os.problema}
+                    </div>
+
+                    <div class="cupom-big-total">TOTAL: ${os.valor || 'R$ 0,00'}</div>
+                    
+                    <div class="cupom-footer">
+                        ${CONFIG.footerMsg}<br><br>.
+                    </div>
+                </div>
+            `;
+            setTimeout(() => window.print(), 250); 
+        }
+
+        // --- IMPRESSÃO A4 ---
+        function printA4(id) {
+            const os = OS_DATA.find(o => o.id === id);
+            const area = document.getElementById('print-area');
+            const chk = (k) => os.checklist && os.checklist[k] ? '[X]' : '[ ]';
+            
+            // Verifica se tem logo salva
+            const logoHtml = CONFIG.logoUrl ? `<img src="${CONFIG.logoUrl}" style="height:60px; max-width:150px; object-fit:contain;">` : '';
+
+            area.innerHTML = `
+                <div class="a4-wrapper">
+                    <div class="a4-header">
+                        <div style="display:flex; gap:15px; align-items:center;">
+                            ${logoHtml}
+                            <div>
+                                <h2 style="margin:0">${CONFIG.storeName}</h2>
+                                <small>Assistência Técnica e Acessórios</small><br>
+                                <small>${CONFIG.phone}</small>
+                            </div>
+                        </div>
+                        <div style="text-align:right">
+                            <h1>OS #${os.id}</h1>
+                            <p>Entrada: ${new Date(os.createdAt).toLocaleDateString('pt-BR')}</p>
+                        </div>
+                    </div>
+
+                    <div class="a4-box">
+                        <div class="a4-title">Dados do Cliente</div>
+                        <div class="a4-row">
+                            <span><strong>Nome:</strong> ${os.cliente}</span>
+                            <span><strong>Contato:</strong> ${os.telefone}</span>
+                        </div>
+                    </div>
+
+                    <div class="a4-box">
+                        <div class="a4-title">Equipamento e Estado</div>
+                        <div class="a4-row">
+                            <span><strong>Modelo:</strong> ${os.modelo}</span>
+                            <span><strong>Senha:</strong> ${os.senha || '-'}</span>
+                        </div>
+                        <br>
+                        <strong>Checklist de Entrada:</strong>
+                        <div style="display:grid; grid-template-columns: repeat(4, 1fr); font-size: 0.8rem; margin-top:5px;">
+                            <div>${chk('check-liga')} Liga</div>
+                            <div>${chk('check-tela')} Tela Quebrada</div>
+                            <div>${chk('check-riscos')} Arranhões</div>
+                            <div>${chk('check-som')} Som Ruim</div>
+                            <div>${chk('check-bateria')} Bateria</div>
+                            <div>${chk('check-biometria')} Biometria</div>
+                        </div>
+                    </div>
+
+                    <div class="a4-box">
+                        <div class="a4-title">Serviço Solicitado</div>
+                        <p>${os.problema}</p>
+                    </div>
+
+                    <div class="a4-box" style="background:#f9f9f9; border-color:#000;">
+                        <div class="a4-row" style="font-size: 1.2rem;">
+                            <span>Status Atual: <strong>${os.status}</strong></span>
+                            <span>Total Estimado: <strong>${os.valor || 'A Combinar'}</strong></span>
+                        </div>
+                    </div>
+
+                    <div style="font-size:0.7rem; text-align:justify; margin-top:20px;">
+                        <strong>TERMOS:</strong> A garantia é de 90 dias sobre o serviço executado. 
+                        A empresa não se responsabiliza por dados armazenados. 
+                        Equipamentos não retirados em 90 dias após notificação serão vendidos para custear despesas.
+                    </div>
+
+                    <div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;">
+                        <div style="width:40%; border-top:1px solid #000; padding-top:5px;">Assinatura ${CONFIG.storeName}</div>
+                        <div style="width:40%; border-top:1px solid #000; padding-top:5px;">Assinatura do Cliente</div>
+                    </div>
+                </div>
+            `;
+            setTimeout(() => window.print(), 250);
+        }
+
+        // --- UTIL ---
+        function openModal() {
+            document.getElementById('formOS').reset();
+            document.getElementById('osId').value = '';
+            document.getElementById('modalTitle').innerText = 'Nova OS';
+            document.querySelectorAll('.checklist-grid input').forEach(i=>i.checked=false);
+            document.getElementById('osModal').style.display = 'flex';
+        }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function editOS(id) {
+            const os = OS_DATA.find(o=>o.id===id);
+            if(!os) return;
+            document.getElementById('osId').value = os.id;
+            document.getElementById('clienteNome').value = os.cliente;
+            document.getElementById('clienteTel').value = os.telefone;
+            document.getElementById('aparelhoModelo').value = os.modelo;
+            document.getElementById('aparelhoSenha').value = os.senha;
+            document.getElementById('servicoDesc').value = os.problema;
+            document.getElementById('statusOS').value = os.status;
+            document.getElementById('valorTotal').value = os.valor;
+            document.querySelectorAll('.checklist-grid input').forEach(i=>i.checked=false);
+            if(os.checklist) Object.keys(os.checklist).forEach(k => { if(document.getElementById(k)) document.getElementById(k).checked = os.checklist[k] });
+            document.getElementById('modalTitle').innerText = 'Editar OS #'+id;
+            document.getElementById('osModal').style.display = 'flex';
+        }
+
+        function deleteOS(id) {
+            if(confirm('Excluir?')) {
+                OS_DATA = OS_DATA.filter(o=>o.id!==id);
+                localStorage.setItem('techrepair_os', JSON.stringify(OS_DATA));
+                renderTable(); renderDashboard();
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            t.classList.add('show');
+            setTimeout(()=>t.classList.remove('show'), 3000);
+        }
+
+        function maskPhone(o){ o.value=o.value.replace(/\D/g,"").replace(/^(\d{2})(\d)/g,"($1) $2").replace(/(\d)(\d{4})$/,"$1-$2").slice(0,15); }
+        function maskMoney(o){ let v=o.value.replace(/\D/g,""); o.value="R$ "+(v/100).toFixed(2).replace(".",",").replace(/(\d)(?=(\d{3})+(?!\d))/g,"$1."); }
+
+        // --- BACKUP ---
+        function exportData() {
+            const blob = new Blob([JSON.stringify(OS_DATA, null, 2)], {type:'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `backup_${CONFIG.storeName}_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+        }
+        function importData(input) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                OS_DATA = JSON.parse(e.target.result);
+                localStorage.setItem('techrepair_os', JSON.stringify(OS_DATA));
+                renderDashboard(); renderTable(); showToast('Dados Restaurados!');
+            };
+            if(input.files[0]) reader.readAsText(input.files[0]);
+        }
+    </script>
+</body>
+</html>
