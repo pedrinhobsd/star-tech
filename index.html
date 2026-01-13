@@ -265,7 +265,7 @@
             <div class="header-page">
                 <div>
                     <h2 style="font-weight: 800; letter-spacing: -1px;">Visão Geral</h2>
-                    <p style="margin: 0; color: var(--text-light);">Sistema de Gestão v5.0</p>
+                    <p style="margin: 0; color: var(--text-light);">Sistema de Gestão v5.0 (Cloud)</p>
                 </div>
                 <button class="btn btn-primary" onclick="openModal()">
                     <i class="fas fa-plus"></i> Nova OS
@@ -304,13 +304,11 @@
             
             <div style="background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <h4 style="margin:0 0 5px 0;"><i class="fas fa-save"></i> Backup</h4>
-                    <p style="margin:0; font-size: 0.85rem; color: var(--text-light);">Mantenha seus dados seguros.</p>
+                    <h4 style="margin:0 0 5px 0;"><i class="fas fa-sync"></i> Sincronização</h4>
+                    <p style="margin:0; font-size: 0.85rem; color: var(--text-light);">Seus dados estão sendo salvos na nuvem.</p>
                 </div>
                 <div>
-                    <button class="btn btn-secondary" onclick="exportData()"><i class="fas fa-download"></i> Baixar</button>
-                    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()"><i class="fas fa-upload"></i> Restaurar</button>
-                    <input type="file" id="importFile" style="display:none" onchange="importData(this)" accept=".json">
+                    <button class="btn btn-secondary" onclick="exportData()"><i class="fas fa-download"></i> Backup JSON</button>
                 </div>
             </div>
         </div>
@@ -355,7 +353,7 @@
                 </div>
                 <div id="empty-state" style="text-align: center; padding: 40px; color: var(--text-light); display: none;">
                     <i class="fas fa-ghost" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i>
-                    <p>Nenhuma ordem de serviço encontrada.</p>
+                    <p>Carregando ou nenhuma ordem encontrada...</p>
                 </div>
             </div>
         </div>
@@ -426,7 +424,7 @@
 
                 <div style="margin-top: 30px; text-align: right;">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('osModal')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar OS</button>
+                    <button type="submit" class="btn btn-primary">Salvar e Sincronizar</button>
                 </div>
             </form>
         </div>
@@ -477,26 +475,44 @@
 
     <script>
         // --- DADOS E INICIALIZAÇÃO ---
-        let OS_DATA = JSON.parse(localStorage.getItem('techrepair_os')) || [];
+        const API_URL = "https://script.google.com/macros/s/AKfycbyhBo7X9kGDut6NnQW_kFTUaVpw0LaTYPEPF9c6T-mV6qg-I4kXVxzGmJrj2hYUzT8Q/exec";
         
-        // Configuração com campo logoUrl
+        let OS_DATA = []; // Agora começa vazio e carregamos da API
+        
+        // Configuração Local
         let CONFIG = JSON.parse(localStorage.getItem('techrepair_config')) || {
             storeName: 'STAR TECH',
             phone: '(00) 00000-0000',
             address: 'Endereço da Loja',
             footerMsg: 'Obrigado pela preferência!',
             theme: 'dark',
-            logoUrl: '' // Armazena a imagem em Base64
+            logoUrl: '' 
         };
 
-        // Variável temporária para o upload da imagem
         let tempLogoBase64 = '';
 
         document.addEventListener('DOMContentLoaded', () => {
             applyTheme();
             applyConfigToUI();
-            renderDashboard();
-            renderTable();
+            
+            // CARREGAMENTO DA NUVEM
+            showToast('Carregando dados da nuvem...');
+            fetch(API_URL)
+                .then(response => response.json())
+                .then(data => {
+                    OS_DATA = data;
+                    renderDashboard();
+                    renderTable();
+                    showToast('Dados sincronizados!');
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Erro ao conectar. Usando dados locais (Offline).');
+                    // Fallback para LocalStorage
+                    OS_DATA = JSON.parse(localStorage.getItem('techrepair_os')) || [];
+                    renderDashboard();
+                    renderTable();
+                });
         });
 
         // --- NAVEGAÇÃO ---
@@ -540,7 +556,6 @@
             document.getElementById('brand-title').innerText = CONFIG.storeName;
             document.title = `${CONFIG.storeName} | Sistema`;
 
-            // Atualiza logo da sidebar
             const sbLogo = document.getElementById('sidebarLogo');
             const sbIcon = document.getElementById('sidebarIcon');
 
@@ -560,7 +575,6 @@
             document.getElementById('cfgStoreAddr').value = CONFIG.address;
             document.getElementById('cfgFooterMsg').value = CONFIG.footerMsg || '';
             
-            // Preview da logo atual se existir
             const prev = document.getElementById('cfgLogoPreview');
             if(CONFIG.logoUrl) {
                 prev.src = CONFIG.logoUrl;
@@ -574,20 +588,17 @@
             document.getElementById('configModal').style.display = 'flex';
         }
 
-        // --- LÓGICA DE UPLOAD DE LOGO ---
         function previewLogo() {
             const file = document.getElementById('cfgLogoInput').files[0];
             if (file) {
-                // Validação de tamanho (max 500KB recomendado para não travar o LocalStorage)
                 if (file.size > 1024 * 1024) {
                     alert("A imagem é muito grande! Use uma imagem menor que 1MB.");
                     document.getElementById('cfgLogoInput').value = '';
                     return;
                 }
-
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    tempLogoBase64 = e.target.result; // Salva na var temporaria
+                    tempLogoBase64 = e.target.result;
                     const prev = document.getElementById('cfgLogoPreview');
                     prev.src = tempLogoBase64;
                     prev.style.display = 'block';
@@ -604,7 +615,6 @@
             CONFIG.address = document.getElementById('cfgStoreAddr').value;
             CONFIG.footerMsg = document.getElementById('cfgFooterMsg').value;
             
-            // Se houve upload de nova logo, atualiza
             if (tempLogoBase64) {
                 CONFIG.logoUrl = tempLogoBase64;
             }
@@ -613,10 +623,9 @@
                 localStorage.setItem('techrepair_config', JSON.stringify(CONFIG));
                 applyConfigToUI();
                 closeModal('configModal');
-                showToast('Configurações e Logo salvas!');
+                showToast('Configurações salvas!');
             } catch (err) {
-                alert("Erro ao salvar! Provavelmente a imagem da logo é muito pesada. Tente uma imagem menor.");
-                console.error(err);
+                alert("Erro ao salvar config local.");
             }
         }
 
@@ -705,10 +714,39 @@
             if(isEdit) OS_DATA[OS_DATA.findIndex(o=>o.id==id)] = data;
             else OS_DATA.push(data);
 
-            localStorage.setItem('techrepair_os', JSON.stringify(OS_DATA));
+            // SALVA E SINCRONIZA
             closeModal('osModal');
             renderTable(); renderDashboard();
-            showToast('Salvo com sucesso!');
+            syncToCloud();
+        }
+
+        function deleteOS(id) {
+            if(confirm('Excluir esta OS permanentemente?')) {
+                OS_DATA = OS_DATA.filter(o=>o.id!==id);
+                renderTable(); renderDashboard();
+                syncToCloud();
+            }
+        }
+
+        // --- SINCRONIZAÇÃO NUVEM ---
+        function syncToCloud() {
+            showToast('Salvando na nuvem...');
+            
+            // Backup Local
+            localStorage.setItem('techrepair_os', JSON.stringify(OS_DATA));
+
+            // Envia para o Google Sheets
+            fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: OS_DATA })
+            }).then(() => {
+                showToast('Salvo na nuvem com sucesso!');
+            }).catch(err => {
+                showToast('Erro ao salvar na nuvem.');
+                console.error(err);
+            });
         }
 
         // --- IMPRESSÃO CUPOM ---
@@ -716,43 +754,33 @@
             const os = OS_DATA.find(o => o.id === id);
             const date = new Date(os.createdAt).toLocaleString('pt-BR');
             const area = document.getElementById('print-area');
-            
-            // Verifica se tem logo salva
             const logoHtml = CONFIG.logoUrl ? `<img src="${CONFIG.logoUrl}" class="cupom-logo">` : '';
 
             area.innerHTML = `
                 <div class="cupom-wrapper">
                     ${logoHtml}
-                    
                     <div class="cupom-header">
                         <div class="cupom-store-name">${CONFIG.storeName}</div>
                         <div>Assistência Técnica</div>
                         <div>${CONFIG.phone}</div>
                         <div>${CONFIG.address}</div>
                     </div>
-                    
                     <div class="cupom-divider"></div>
                     <div style="text-align:center; font-weight:bold; font-size:14px;">OS / RECIBO #${os.id}</div>
                     <div class="cupom-divider"></div>
-                    
                     <div class="cupom-row"><span>Data:</span> <span>${date}</span></div>
                     <div class="cupom-row"><span>Cliente:</span> <span class="cupom-val">${os.cliente.split(' ')[0]}...</span></div>
                     <div class="cupom-row"><span>Fone:</span> <span>${os.telefone}</span></div>
-                    
                     <div class="cupom-divider"></div>
-                    
                     <div style="margin-bottom:5px;">
                         <span style="font-weight:bold">APARELHO:</span> ${os.modelo}<br>
                         <span style="font-size:11px">Senha: ${os.senha || 'N/A'}</span>
                     </div>
-                    
                     <div style="margin-bottom:5px;">
                         <span style="font-weight:bold">SERVIÇO/DEFEITO:</span><br>
                         ${os.problema}
                     </div>
-
                     <div class="cupom-big-total">TOTAL: ${os.valor || 'R$ 0,00'}</div>
-                    
                     <div class="cupom-footer">
                         ${CONFIG.footerMsg}<br><br>.
                     </div>
@@ -766,8 +794,6 @@
             const os = OS_DATA.find(o => o.id === id);
             const area = document.getElementById('print-area');
             const chk = (k) => os.checklist && os.checklist[k] ? '[X]' : '[ ]';
-            
-            // Verifica se tem logo salva
             const logoHtml = CONFIG.logoUrl ? `<img src="${CONFIG.logoUrl}" style="height:60px; max-width:150px; object-fit:contain;">` : '';
 
             area.innerHTML = `
@@ -786,7 +812,6 @@
                             <p>Entrada: ${new Date(os.createdAt).toLocaleDateString('pt-BR')}</p>
                         </div>
                     </div>
-
                     <div class="a4-box">
                         <div class="a4-title">Dados do Cliente</div>
                         <div class="a4-row">
@@ -794,7 +819,6 @@
                             <span><strong>Contato:</strong> ${os.telefone}</span>
                         </div>
                     </div>
-
                     <div class="a4-box">
                         <div class="a4-title">Equipamento e Estado</div>
                         <div class="a4-row">
@@ -812,25 +836,20 @@
                             <div>${chk('check-biometria')} Biometria</div>
                         </div>
                     </div>
-
                     <div class="a4-box">
                         <div class="a4-title">Serviço Solicitado</div>
                         <p>${os.problema}</p>
                     </div>
-
                     <div class="a4-box" style="background:#f9f9f9; border-color:#000;">
                         <div class="a4-row" style="font-size: 1.2rem;">
                             <span>Status Atual: <strong>${os.status}</strong></span>
                             <span>Total Estimado: <strong>${os.valor || 'A Combinar'}</strong></span>
                         </div>
                     </div>
-
                     <div style="font-size:0.7rem; text-align:justify; margin-top:20px;">
                         <strong>TERMOS:</strong> A garantia é de 90 dias sobre o serviço executado. 
-                        A empresa não se responsabiliza por dados armazenados. 
-                        Equipamentos não retirados em 90 dias após notificação serão vendidos para custear despesas.
+                        A empresa não se responsabiliza por dados armazenados.
                     </div>
-
                     <div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;">
                         <div style="width:40%; border-top:1px solid #000; padding-top:5px;">Assinatura ${CONFIG.storeName}</div>
                         <div style="width:40%; border-top:1px solid #000; padding-top:5px;">Assinatura do Cliente</div>
@@ -867,14 +886,6 @@
             document.getElementById('osModal').style.display = 'flex';
         }
 
-        function deleteOS(id) {
-            if(confirm('Excluir?')) {
-                OS_DATA = OS_DATA.filter(o=>o.id!==id);
-                localStorage.setItem('techrepair_os', JSON.stringify(OS_DATA));
-                renderTable(); renderDashboard();
-            }
-        }
-
         function showToast(msg) {
             const t = document.getElementById('toast');
             document.getElementById('toast-msg').innerText = msg;
@@ -885,22 +896,12 @@
         function maskPhone(o){ o.value=o.value.replace(/\D/g,"").replace(/^(\d{2})(\d)/g,"($1) $2").replace(/(\d)(\d{4})$/,"$1-$2").slice(0,15); }
         function maskMoney(o){ let v=o.value.replace(/\D/g,""); o.value="R$ "+(v/100).toFixed(2).replace(".",",").replace(/(\d)(?=(\d{3})+(?!\d))/g,"$1."); }
 
-        // --- BACKUP ---
         function exportData() {
             const blob = new Blob([JSON.stringify(OS_DATA, null, 2)], {type:'application/json'});
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `backup_${CONFIG.storeName}_${new Date().toISOString().slice(0,10)}.json`;
+            a.download = `backup_cloud_${new Date().toISOString().slice(0,10)}.json`;
             a.click();
-        }
-        function importData(input) {
-            const reader = new FileReader();
-            reader.onload = e => {
-                OS_DATA = JSON.parse(e.target.result);
-                localStorage.setItem('techrepair_os', JSON.stringify(OS_DATA));
-                renderDashboard(); renderTable(); showToast('Dados Restaurados!');
-            };
-            if(input.files[0]) reader.readAsText(input.files[0]);
         }
     </script>
 </body>
